@@ -37,9 +37,7 @@ from detectron2.data import build_detection_test_loader
 from aistron.data import AmodalDatasetMapper
 from aistron.evaluation import AmodalInstanceEvaluator
 from aistron.config import add_aistron_config
-
-from aistron.data.datasets.coco_amodal import register_aistron_cocolike_instances
-
+from regist import register_cocoa
 
 def build_evaluator(cfg, dataset_name, output_folder=None):
     """
@@ -101,111 +99,36 @@ class Trainer(DefaultTrainer):
         res = OrderedDict({k + "_TTA": v for k, v in res.items()})
         return res
 
+
 def setup(args):
     """
     Create configs and perform basic setups.
     """
     cfg = get_cfg()
     add_aistron_config(cfg)
+    root = os.getenv("AISTRON_DATASETS", "datasets")
+    register_cocoa(root)
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
-    register_aistron_cocolike_instances(
-        name ="annotation_cocoa_train", 
-        metadata ={},
-        json_file = "/media/binh/D/ComputerVision/data/datasets/COCOA/annotations/annotations_aistron.json",
-        image_root ="/media/binh/D/ComputerVision/data/datasets/COCOA/annotations/")
-    register_aistron_cocolike_instances(
-        name ="annotation_cocoa_test", 
-        metadata ={},
-        json_file = "/media/binh/D/ComputerVision/data/datasets/COCOA/annotations/annotations_aistron.json",
-        image_root ="/media/binh/D/ComputerVision/data/datasets/COCOA/annotations/")
-    # register_aistron_cocolike_instances(
-    #     name ="annotation_roboflow_train", 
-    #     metadata ={},
-    #     json_file = "/media/binh/D/ComputerVision/data/datasets/COCOA/annotations/annotations_aistron.json",
-    #     image_root ="/media/binh/D/ComputerVision/data/datasets/COCOA/roboflow/train")
-    
-    # register_aistron_cocolike_instances(
-    #     name ="annotation_roboflow_valid", 
-    #     metadata ={},
-    #     json_file = "/media/binh/D/ComputerVision/data/datasets/COCOA/roboflow/valid/_annotations.coco.json",
-    #     image_root ="/media/binh/D/ComputerVision/data/datasets/COCOA/roboflow/valid")
-    
-    # register_aistron_cocolike_instances(
-    #     name ="annotation_roboflow_test", 
-    #     metadata ={},
-    #     json_file = "/media/binh/D/ComputerVision/data/datasets/COCOA/roboflow/test/_annotations.coco.json",
-    #     image_root ="/media/binh/D/ComputerVision/data/datasets/COCOA/roboflow/test")
-    
-    # register_aistron_cocolike_instances(
-    #     name = "annotation_cocoa_amodal",
-    #     metadata = {},
-    #     json_file = "/media/binh/D/ComputerVision/data/datasets/COCOA/annotations/annotations_aistron.json",
-    #     image_root = "/media/binh/D/ComputerVision/data/datasets/COCOA/annotations")
-
-    
-    cfg.DATASETS.TRAIN = ("annotation_cocoa_train",)
-    #cfg.DATASETS.VAL = ("annotation_roboflow_valid",)
-    cfg.DATASETS.TEST = ("annotation_cocoa_test",)
-    cfg.TEST.AUG.ENABLED = True
-    cfg.SOLVER.IMS_PER_BATCH = 1
-    cfg.MODEL.DEVICE = "cuda"
     cfg.freeze()
     default_setup(cfg, args)
     return cfg
 
 
-# Hàm load ảnh từ dataset, nhận diện tinh thể trong ảnh và hiển thị
-# cùng với ảnh được dán nhãn thủ công bằng tay
-import random
-import cv2
-import numpy as np
-from detectron2.utils.visualizer import Visualizer
-from IPython.display import display, Image
-from detectron2.data import MetadataCatalog, DatasetCatalog
-import logging
-from detectron2.engine import DefaultPredictor
-from PIL import Image
-import time
-import torch
-test_dataset = "annotation_cocoa_test"
-def show_demo_inference_image_from_dataset(dataset_dicts, cfg,sample_size = 10):
-  predictor = DefaultPredictor(cfg)  
-  test_metadata = MetadataCatalog.get(test_dataset)
-  i=0
-  for d in random.sample(dataset_dicts, sample_size):
-    img_origin = cv2.imread(d["file_name"])
-    #img = cv2.cvtColor(img_origin, cv2.COLOR_BGR2RGB)
-    start_time = time.time()
-    outputs = predictor(img_origin)
-    end_time = time.time()
-    v = Visualizer(img_origin[:, :, ::-1], metadata=test_metadata, scale=0.8)
-    out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
-    print(f"Inferred Time: {end_time - start_time}")
-    visualizer = Visualizer(img_origin[:, :, ::-1], metadata=test_metadata, scale=0.8)
-    vis = visualizer.draw_dataset_dict(d)
-
-    Hori = np.concatenate((out.get_image()[:, :, ::-1], vis.get_image()[:, :, ::-1]), axis=1)
-    Hori_pil = Image.fromarray(Hori)
-    #Save image
-    Hori_pil.save("test_" + str(i) + ".jpg")
-
 def main(args):
     cfg = setup(args)
+    print(cfg)
     if args.eval_only:
         model = Trainer.build_model(cfg)
         DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
             cfg.MODEL.WEIGHTS, resume=args.resume
         )
-        # res = Trainer.test(cfg, model)
-        # if cfg.TEST.AUG.ENABLED:
-        #     res.update(Trainer.test_with_TTA(cfg, model))
-        # if comm.is_main_process():
-        #     verify_results(cfg, res)
-        dataset_dictionaries = DatasetCatalog.get(test_dataset)
-        show_demo_inference_image_from_dataset(dataset_dictionaries,cfg)
-
-        # return res
+        res = Trainer.test(cfg, model)
+        if cfg.TEST.AUG.ENABLED:
+            res.update(Trainer.test_with_TTA(cfg, model))
+        if comm.is_main_process():
+            verify_results(cfg, res)
+        return res
 
     """
     If you'd like to do anything fancier than the standard training logic,
@@ -218,10 +141,7 @@ def main(args):
         trainer.register_hooks(
             [hooks.EvalHook(0, lambda: trainer.test_with_TTA(cfg, trainer.model))]
         )
-        
-    trainer.train()
-    dataset_dictionaries = DatasetCatalog.get(test_dataset)
-    show_demo_inference_image_from_dataset(dataset_dictionaries,cfg)
+    return trainer.train()
 
 
 if __name__ == "__main__":

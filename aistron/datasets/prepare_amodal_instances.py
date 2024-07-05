@@ -164,7 +164,6 @@ def process_occluder_gt_and_misc(json_file, dataset_name=None, extra_annotation_
         #     import pdb;pdb.set_trace()
         objs = []
         for anno in anno_dict_list:
-            print("Check>>>>>>>>>>>>>>>")
             # Check that the image_id in this annotation is the same as
             # the image_id we're looking at.
             # This fails only when the data parsing logic or the annotation file is buggy.
@@ -221,7 +220,6 @@ def process_occluder_gt_and_misc(json_file, dataset_name=None, extra_annotation_
                 obj["keypoints"] = keypts
 
             obj["bbox_mode"] = BoxMode.XYWH_ABS
-            print(">>>>>>>>>>>>>>has bbox_mode")
             if id_map:
                 obj["category_id"] = id_map[obj["category_id"]]
             objs.append(obj)
@@ -295,7 +293,6 @@ def process_occluder_gt_and_misc(json_file, dataset_name=None, extra_annotation_
 
         box_list = []
         for obj in objs:
-            print('amodal bbox:', obj['amodal_bbox'])
             box_list.append([obj['amodal_bbox'][0],obj['amodal_bbox'][1],obj['amodal_bbox'][0]+obj['amodal_bbox'][2],obj['amodal_bbox'][1]+obj['amodal_bbox'][3]])
 
         i_box_list = []
@@ -313,6 +310,7 @@ def process_occluder_gt_and_misc(json_file, dataset_name=None, extra_annotation_
             i_box_mask = np.zeros((int(img_dict["height"]), int(img_dict["width"])), dtype=int)
             i_box_mask[int(i_box_list[index][1]):int(i_box_list[index][3]),int(i_box_list[index][0]):int(i_box_list[index][2])] = 1
             i_box_mask_list.append(i_box_mask)
+
         sum_box += len(box_list)
 
         for index1, a_box in enumerate(box_list):
@@ -368,16 +366,9 @@ def process_occluder_gt_and_misc(json_file, dataset_name=None, extra_annotation_
 
     #print('sum intersect rate:', intersect_rate)
     #print('sum box:', sum_box)
-    if sum_box > 0:
-        print("ok")
-        avg_intersect_rate = intersect_rate/float(sum_box)
-    else:
-        print("not ok")
-        avg_intersect_rate = 0   
-    if intersect_num > 0:
-        avg_intersect_rate_over_inter = intersect_rate/float(intersect_num)
-    else:
-        avg_intersect_rate_over_inter = 0
+
+    avg_intersect_rate = intersect_rate/float(sum_box)
+    avg_intersect_rate_over_inter = intersect_rate/float(intersect_num)
     #print('avg rate:', avg_intersect_rate)
     #print('avg rate over intersect:', avg_intersect_rate_over_inter)
 
@@ -455,7 +446,6 @@ def convert_to_aistron_cocolike_dict(dataset_dicts, categories):
 
             # keep the annotation still works as standard COCO
             coco_annotation["bbox"] = coco_annotation["amodal_bbox"]
-            coco_annotation["bbox_mode"] = BoxMode.XYWH_ABS
             coco_annotation["area"] = coco_annotation["amodal_area"]
 
             # Add optional fields

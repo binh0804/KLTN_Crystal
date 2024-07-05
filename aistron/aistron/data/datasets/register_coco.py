@@ -6,7 +6,7 @@ register coco dataset
 import os
 import random
 from os.path import join
-from .coco_amodal import register_aistron_cocolike_instances
+from aistron.data.datasets.coco_amodal import register_aistron_cocolike_instances
 
 RANDOM_COLOR = [random.randint(0, 255) for _ in range(3)]
 

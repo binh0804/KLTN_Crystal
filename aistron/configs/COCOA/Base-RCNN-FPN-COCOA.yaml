@@ -3,15 +3,15 @@ MODEL:
   ROI_HEADS:
     NUM_CLASSES: 1
 DATASETS:
-  TRAIN: ("annotation_cocoa",)
-  TEST: ("annotation_cocoa",)
+  TRAIN: ("cocoa_train_crystal",)
+  TEST: ("cocoa_val_crystal","cocoa_test_crystal")
 SOLVER:
-  IMS_PER_BATCH: 1
+  IMS_PER_BATCH: 2
   BASE_LR: 0.0005
-  STEPS: (2500, 3800)
-  MAX_ITER: 5000
+  STEPS: (5000, 8000)
+  MAX_ITER: 10000
 TEST:
-  EVAL_PERIOD: 2000
+  EVAL_PERIOD: 5000
 INPUT:
-  MIN_SIZE_TRAIN: (320, 400, 640, 720)
+  MIN_SIZE_TRAIN: (640, 672, 704, 736, 768, 800)
   MASK_FORMAT: "bitmask"

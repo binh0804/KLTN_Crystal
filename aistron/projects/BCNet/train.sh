@@ -14,4 +14,4 @@ export CUDA_VISIBLE_DEVICES=0,1
 # the training command below could lead to the unused parameter error
 # change line 74 in detectron2/engine/defaults.py to:
 # ddp = DistributedDataParallel(model, find_unused_parameters=True, **kwargs)
-python projects/BCNet/train_net.py --config-file projects/BCNet/configs/coco/bcnet_R50_FPN_coco_1x.yaml --num-gpus 0 --resume \
+python projects/BCNet/train_net.py --config-file projects/BCNet/configs/coco/bcnet_R50_FPN_coco_1x.yaml --num-gpus 2 --resume \

@@ -1,1 +1,0 @@
-python tools/visualize_data.py --source annotation --show --segm_type amodal --dataset-name annotation_cocoa_amodal 

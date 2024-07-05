@@ -13,9 +13,6 @@ COCOA_CATEGORIES = [
     {'color': RANDOM_COLOR, 'isthing': 1, 'supercategory': 'superobject', 'id': 1, 'name': 'object'}
 ]
 
-CRYSTAL_CATEGORY = [
-    {'color': RANDOM_COLOR, 'isthing': 1, 'supercategory': 'superobject', 'id': 1, 'name': 'crystal'}]
-
 
 COCOA_cls_CATEGORIES = [
     {'isthing': 1, 'supercategory': 'person', 'id': 1, 'name': 'person', 'color': [33, 28, 99]},

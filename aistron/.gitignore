@@ -4,7 +4,6 @@ _ext
 *.pyd
 *.so
 *.dll
-*.pth
 *.egg-info/
 build/
 dist/
